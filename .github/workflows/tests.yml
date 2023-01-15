@@ -1,14 +1,16 @@
-name: tests
+name: Test
 on:
-  push:
-    branches:
-      - '**'
   pull_request:
     branches:
       - '**'
+  push:
+    branches:
+      - '**'
+
 jobs:
-  tests:
+  test:
     runs-on: ubuntu-latest
     steps:
-      - name: GoLang Test
-        uses: n8maninger/action-golang-test@v1
+      - uses: actions/checkout@v3
+      - uses: actions/setup-go@v3
+      - uses: n8maninger/action-golang-test@v1
