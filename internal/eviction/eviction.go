@@ -1,19 +1,14 @@
 package eviction
 
 import (
-	"sync"
 	"time"
 
 	"github.com/pijng/mooncache/internal/keymaps"
 	"github.com/pijng/mooncache/internal/shards"
 )
 
-var once sync.Once
-
 func Build() {
-	once.Do(func() {
-		go worker()
-	})
+	go worker()
 }
 
 func worker() {

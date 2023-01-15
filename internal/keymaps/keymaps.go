@@ -20,38 +20,35 @@ var valueTTLs hashmap[uint64, int64]
 var keyPolicyAttrs hashmap[uint64, int64]
 
 var shardLocks map[int]*sync.RWMutex
-var once sync.Once
 
 func Build(shardsAmount, shardSize int) {
-	once.Do(func() {
-		shardVolumes.Mux = &sync.RWMutex{}
-		shardVolumes.M = make(map[int]*int)
+	shardVolumes.Mux = &sync.RWMutex{}
+	shardVolumes.M = make(map[int]*int)
 
-		keyIndexes.Mux = &sync.RWMutex{}
-		keyIndexes.M = make(map[uint64]*int)
+	keyIndexes.Mux = &sync.RWMutex{}
+	keyIndexes.M = make(map[uint64]*int)
 
-		keyShardNums.Mux = &sync.RWMutex{}
-		keyShardNums.M = make(map[uint64]*int)
+	keyShardNums.Mux = &sync.RWMutex{}
+	keyShardNums.M = make(map[uint64]*int)
 
-		valueSizes.Mux = &sync.RWMutex{}
-		valueSizes.M = make(map[uint64]*int)
+	valueSizes.Mux = &sync.RWMutex{}
+	valueSizes.M = make(map[uint64]*int)
 
-		valueCosts.Mux = &sync.RWMutex{}
-		valueCosts.M = make(map[uint64]*int)
+	valueCosts.Mux = &sync.RWMutex{}
+	valueCosts.M = make(map[uint64]*int)
 
-		valueTTLs.Mux = &sync.RWMutex{}
-		valueTTLs.M = make(map[uint64]*int64)
+	valueTTLs.Mux = &sync.RWMutex{}
+	valueTTLs.M = make(map[uint64]*int64)
 
-		keyPolicyAttrs.Mux = &sync.RWMutex{}
-		keyPolicyAttrs.M = make(map[uint64]*int64)
+	keyPolicyAttrs.Mux = &sync.RWMutex{}
+	keyPolicyAttrs.M = make(map[uint64]*int64)
 
-		shardLocks = make(map[int]*sync.RWMutex)
+	shardLocks = make(map[int]*sync.RWMutex)
 
-		for n := 0; n < shardsAmount; n++ {
-			shardVolumes.M[n] = &shardSize
-			shardLocks[n] = &sync.RWMutex{}
-		}
-	})
+	for n := 0; n < shardsAmount; n++ {
+		shardVolumes.M[n] = &shardSize
+		shardLocks[n] = &sync.RWMutex{}
+	}
 }
 
 func set[K int | uint64, V int | int64](key K, value V, hm hashmap[K, V]) {

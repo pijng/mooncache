@@ -44,8 +44,7 @@ func TestCantFitInShardWithPolicy(t *testing.T) {
 		size      int
 	}
 
-	config := config.Build(1<<10, 1, nil)
-	config.Policy = policy.LRU
+	config := config.Build(1<<10, 1, policy.LRU)
 	keymaps.Build(config.ShardsAmount, config.ShardSize)
 	keymaps.AddKey(0, 0, 0, 1<<10, 0, 0)
 

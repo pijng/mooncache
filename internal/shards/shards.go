@@ -2,7 +2,6 @@ package shards
 
 import (
 	"fmt"
-	"sync"
 
 	"github.com/pijng/mooncache/internal/config"
 	"github.com/pijng/mooncache/internal/hasher"
@@ -14,15 +13,12 @@ import (
 type shard []interface{}
 
 var shards []shard
-var once sync.Once
 
 func Build(amount int) {
-	once.Do(func() {
-		shards = make([]shard, amount)
-		for n := 0; n < amount; n++ {
-			shards[n] = make(shard, 0)
-		}
-	})
+	shards = make([]shard, amount)
+	for n := 0; n < amount; n++ {
+		shards[n] = make(shard, 0)
+	}
 }
 
 // Set ...

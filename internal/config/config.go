@@ -1,8 +1,6 @@
 package config
 
 import (
-	"sync"
-
 	"github.com/pijng/mooncache/internal/policy"
 )
 
@@ -13,14 +11,11 @@ type configuration struct {
 }
 
 var config configuration
-var once sync.Once
 
 func Build(shardSize, shardsAmount int, policy policy.Policy) *configuration {
-	once.Do(func() {
-		config.ShardSize = shardSize
-		config.ShardsAmount = shardsAmount
-		config.Policy = policy
-	})
+	config.ShardSize = shardSize
+	config.ShardsAmount = shardsAmount
+	config.Policy = policy
 
 	return &config
 }

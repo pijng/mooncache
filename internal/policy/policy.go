@@ -1,7 +1,6 @@
 package policy
 
 import (
-	"sync"
 	"time"
 
 	"github.com/pijng/mooncache/internal/keymaps"
@@ -21,28 +20,25 @@ type Policy func() Variant
 
 var getKeyByPolicy func() uint64
 var UpdateKeyAttrByPolicy func(uint64)
-var once sync.Once
 
 func Build(variant Variant) {
-	once.Do(func() {
-		switch variant {
-		case _LRU:
-			getKeyByPolicy = keymaps.GetKeyByMinPolicyAttr
-			UpdateKeyAttrByPolicy = updateKeyAttrByTime
-		case _LFU:
-			getKeyByPolicy = keymaps.GetKeyByMinPolicyAttr
-			UpdateKeyAttrByPolicy = updateKeyAttrByCount
-		case _MRU:
-			getKeyByPolicy = keymaps.GetKeyByMaxPolicyAttr
-			UpdateKeyAttrByPolicy = updateKeyAttrByTime
-		case _MFU:
-			getKeyByPolicy = keymaps.GetKeyByMaxPolicyAttr
-			UpdateKeyAttrByPolicy = updateKeyAttrByCount
-		case _FIFO:
-			getKeyByPolicy = keymaps.GetKeyByMinIndex
-		default:
-		}
-	})
+	switch variant {
+	case _LRU:
+		getKeyByPolicy = keymaps.GetKeyByMinPolicyAttr
+		UpdateKeyAttrByPolicy = updateKeyAttrByTime
+	case _LFU:
+		getKeyByPolicy = keymaps.GetKeyByMinPolicyAttr
+		UpdateKeyAttrByPolicy = updateKeyAttrByCount
+	case _MRU:
+		getKeyByPolicy = keymaps.GetKeyByMaxPolicyAttr
+		UpdateKeyAttrByPolicy = updateKeyAttrByTime
+	case _MFU:
+		getKeyByPolicy = keymaps.GetKeyByMaxPolicyAttr
+		UpdateKeyAttrByPolicy = updateKeyAttrByCount
+	case _FIFO:
+		getKeyByPolicy = keymaps.GetKeyByMinIndex
+	default:
+	}
 }
 
 func updateKeyAttrByTime(key uint64) {
