@@ -20,18 +20,18 @@ func Build(shardSize, shardsAmount int, policy policy.Policy) *configuration {
 	return &config
 }
 
-func GetConfig() *configuration {
+func Config() *configuration {
 	return &config
 }
 
-func GetShardSize() int {
+func ShardSize() int {
 	return config.ShardSize
 }
 
-func GetShardsAmount() int {
+func ShardsAmount() int {
 	return config.ShardsAmount
 }
 
-func GetPolicy() policy.Policy {
+func Policy() policy.Policy {
 	return config.Policy
 }

@@ -30,7 +30,7 @@ func set(key string, hashedKey uint64, value interface{}, cost int, ttl int64) e
 	shardNum := hasher.JCH(hashedKey, len(shards))
 	size := lib.ValueSize(value)
 
-	if lib.CantFitInShard(config.GetShardSize(), shardNum, size) {
+	if lib.CantFitInShard(config.ShardSize(), shardNum, size) {
 		return fmt.Errorf("Can't fit value for `%v` key – not enough shard volume: value has `%v` size out of `%v` for shard[%v]",
 			key, size, keymaps.ShardVolume(shardNum), shardNum)
 	}
@@ -65,7 +65,7 @@ func get(key uint64) (interface{}, error) {
 	lock.RLock()
 	defer lock.RUnlock()
 
-	index, ok := keymaps.GetKeyIndex(key)
+	index, ok := keymaps.KeyIndex(key)
 	if !ok {
 		return nil, lib.ValueNotPresent()
 	}
@@ -90,7 +90,7 @@ func DelByHash(key uint64) {
 	lock.RLock()
 	defer lock.RUnlock()
 
-	index, ok := keymaps.GetKeyIndex(key)
+	index, ok := keymaps.KeyIndex(key)
 	if !ok {
 		return
 	}

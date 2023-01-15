@@ -24,25 +24,25 @@ var UpdateKeyAttrByPolicy func(uint64)
 func Build(variant Variant) {
 	switch variant {
 	case _LRU:
-		getKeyByPolicy = keymaps.GetKeyByMinPolicyAttr
+		getKeyByPolicy = keymaps.KeyByMinPolicyAttr
 		UpdateKeyAttrByPolicy = updateKeyAttrByTime
 	case _LFU:
-		getKeyByPolicy = keymaps.GetKeyByMinPolicyAttr
+		getKeyByPolicy = keymaps.KeyByMinPolicyAttr
 		UpdateKeyAttrByPolicy = updateKeyAttrByCount
 	case _MRU:
-		getKeyByPolicy = keymaps.GetKeyByMaxPolicyAttr
+		getKeyByPolicy = keymaps.KeyByMaxPolicyAttr
 		UpdateKeyAttrByPolicy = updateKeyAttrByTime
 	case _MFU:
-		getKeyByPolicy = keymaps.GetKeyByMaxPolicyAttr
+		getKeyByPolicy = keymaps.KeyByMaxPolicyAttr
 		UpdateKeyAttrByPolicy = updateKeyAttrByCount
 	case _FIFO:
-		getKeyByPolicy = keymaps.GetKeyByMinIndex
+		getKeyByPolicy = keymaps.KeyByMinIndex
 	default:
 	}
 }
 
 func updateKeyAttrByTime(key uint64) {
-	_, ok := keymaps.GetKeyPolicyAttr(key)
+	_, ok := keymaps.KeyPolicyAttr(key)
 	if !ok {
 		return
 	}
@@ -52,7 +52,7 @@ func updateKeyAttrByTime(key uint64) {
 }
 
 func updateKeyAttrByCount(key uint64) {
-	count, ok := keymaps.GetKeyPolicyAttr(key)
+	count, ok := keymaps.KeyPolicyAttr(key)
 	if !ok {
 		return
 	}

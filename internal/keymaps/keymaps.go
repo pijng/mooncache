@@ -93,7 +93,7 @@ func DelKey(key uint64) {
 	remove(key, valueCosts)
 	remove(key, valueTTLs)
 
-	incrementShardVolume(getKeyShardNum(key), getValueSize(key))
+	incrementShardVolume(keyShardNum(key), valueSize(key))
 
 	remove(key, valueSizes)
 	remove(key, keyShardNums)
@@ -112,7 +112,7 @@ func incrementShardVolume(shardNum, size int) {
 	set(shardNum, currentVolume+size, shardVolumes)
 }
 
-func GetKeyIndex(key uint64) (int, bool) {
+func KeyIndex(key uint64) (int, bool) {
 	index, ok := get(key, keyIndexes)
 	if !ok {
 		return 0, false
@@ -121,7 +121,7 @@ func GetKeyIndex(key uint64) (int, bool) {
 	return index, true
 }
 
-func getValueSize(key uint64) int {
+func valueSize(key uint64) int {
 	size, ok := get(key, valueSizes)
 	if !ok {
 		return 0
@@ -130,7 +130,7 @@ func getValueSize(key uint64) int {
 	return size
 }
 
-func getValueCost(key uint64) int {
+func valueCost(key uint64) int {
 	cost, ok := get(key, valueCosts)
 	if !ok {
 		return 0
@@ -139,11 +139,11 @@ func getValueCost(key uint64) int {
 	return cost
 }
 
-func GetValueTTLs() *hashmap[uint64, int64] {
+func ValueTTLs() *hashmap[uint64, int64] {
 	return &valueTTLs
 }
 
-func GetStaleKeys() []uint64 {
+func StaleKeys() []uint64 {
 	now := time.Now().Unix()
 	stale := make([]uint64, 0)
 
@@ -160,7 +160,7 @@ func GetStaleKeys() []uint64 {
 	return stale
 }
 
-func getKeyShardNum(key uint64) int {
+func keyShardNum(key uint64) int {
 	shardNum, ok := get(key, keyShardNums)
 	if !ok {
 		return 0
@@ -173,7 +173,7 @@ func SetKeyPolicyAttr(key uint64, attr int64) {
 	set(key, attr, keyPolicyAttrs)
 }
 
-func GetKeyPolicyAttr(key uint64) (int64, bool) {
+func KeyPolicyAttr(key uint64) (int64, bool) {
 	attr, ok := get(key, keyPolicyAttrs)
 	if !ok {
 		return 0, false
@@ -196,7 +196,7 @@ func ShardLock(shardNum int) *sync.RWMutex {
 	return shardLocks[shardNum]
 }
 
-func GetKeyByMinPolicyAttr() uint64 {
+func KeyByMinPolicyAttr() uint64 {
 	var hash uint64
 	minCost := math.MaxInt
 	minValue := int64(math.MaxInt64)
@@ -206,7 +206,7 @@ func GetKeyByMinPolicyAttr() uint64 {
 
 	for key, attr := range keyPolicyAttrs.M {
 		currentAttr := *attr
-		currentCost := getValueCost(key)
+		currentCost := valueCost(key)
 
 		if currentAttr < minValue && currentCost < minCost {
 			minValue = currentAttr
@@ -218,7 +218,7 @@ func GetKeyByMinPolicyAttr() uint64 {
 	return hash
 }
 
-func GetKeyByMaxPolicyAttr() uint64 {
+func KeyByMaxPolicyAttr() uint64 {
 	var hash uint64
 	var maxCost int
 	var maxValue int64
@@ -228,7 +228,7 @@ func GetKeyByMaxPolicyAttr() uint64 {
 
 	for key, attr := range keyPolicyAttrs.M {
 		currentAttr := *attr
-		currentCost := getValueCost(key)
+		currentCost := valueCost(key)
 
 		if currentAttr > maxValue && currentCost > maxCost {
 			maxValue = currentAttr
@@ -240,7 +240,7 @@ func GetKeyByMaxPolicyAttr() uint64 {
 	return hash
 }
 
-func GetKeyByMinIndex() uint64 {
+func KeyByMinIndex() uint64 {
 	var hash uint64
 	maxCost := math.MaxInt
 	minIndex := int(math.MaxInt64)
@@ -250,7 +250,7 @@ func GetKeyByMinIndex() uint64 {
 
 	for key, attr := range keyIndexes.M {
 		currentAttr := *attr
-		currentCost := getValueCost(key)
+		currentCost := valueCost(key)
 
 		if currentAttr < minIndex && currentCost < maxCost {
 			minIndex = currentAttr

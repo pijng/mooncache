@@ -22,5 +22,5 @@ func ValueNotPresent() error {
 
 func CantFitInShard(shardSize, shardNum int, size int) bool {
 	enoughSpaceInShard := keymaps.EnoughSpaceInShard(shardNum, size)
-	return size > shardSize || !enoughSpaceInShard && config.GetPolicy() == nil
+	return size > shardSize || !enoughSpaceInShard && config.Policy() == nil
 }

@@ -28,7 +28,7 @@ func New(config *Config) error {
 
 // Set ...
 func Set(key string, value interface{}, itemOptions ...ItemOptions) error {
-	if config.GetConfig() == nil {
+	if config.Config() == nil {
 		return lib.CacheNotInitialized()
 	}
 
@@ -43,7 +43,7 @@ func Set(key string, value interface{}, itemOptions ...ItemOptions) error {
 
 // Get ...
 func Get(key string) (interface{}, error) {
-	if config.GetConfig() == nil {
+	if config.Config() == nil {
 		return nil, lib.CacheNotInitialized()
 	}
 
@@ -52,7 +52,7 @@ func Get(key string) (interface{}, error) {
 
 // Del ...
 func Del(key string) error {
-	if config.GetConfig() == nil {
+	if config.Config() == nil {
 		return lib.CacheNotInitialized()
 	}
 
