@@ -13,9 +13,10 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-go@v3
-      - uses: n8maninger/action-golang-test@v1
-        with:
-          args: "-race;-coverprofile coverage.out;-covermode atomic"
+      - name: 'Unit tests'
+        run: |
+              go test ./... -race -coverprofile coverage.out -covermode atomic
+              go tool cover -func coverage.out
       - name: Quality Gate - Test coverage shall be above threshold
         env:
             TESTCOVERAGE_THRESHOLD: 70
