@@ -12,5 +12,5 @@ type Config struct {
 }
 
 func buildConfig(c *Config) {
-	config.AssignConfig(c.ShardSize, c.ShardsAmount, c.Policy)
+	config.Build(c.ShardSize, c.ShardsAmount, c.Policy)
 }

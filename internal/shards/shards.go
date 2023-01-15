@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"sync"
 
+	"github.com/pijng/mooncache/internal/config"
 	"github.com/pijng/mooncache/internal/hasher"
 	"github.com/pijng/mooncache/internal/keymaps"
 	"github.com/pijng/mooncache/internal/lib"
@@ -32,9 +33,8 @@ func Set(key string, value interface{}, cost int, ttl int64) error {
 func set(key string, hashedKey uint64, value interface{}, cost int, ttl int64) error {
 	shardNum := hasher.JCH(hashedKey, len(shards))
 	size := lib.ValueSize(value)
-	enoughSpaceInShard := keymaps.EnoughSpaceInShard(shardNum, size)
 
-	if lib.CantFitInShard(size, enoughSpaceInShard) {
+	if lib.CantFitInShard(config.GetShardSize(), shardNum, size) {
 		return fmt.Errorf("Can't fit value for `%v` key – not enough shard volume: value has `%v` size out of `%v` for shard[%v]",
 			key, size, keymaps.ShardVolume(shardNum), shardNum)
 	}

@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/pijng/mooncache/internal/config"
+	"github.com/pijng/mooncache/internal/keymaps"
 )
 
 func ValueSize(value interface{}) int {
@@ -19,6 +20,7 @@ func ValueNotPresent() error {
 	return fmt.Errorf("Value  is not present in the cache")
 }
 
-func CantFitInShard(size int, enoughSpaceInShard bool) bool {
-	return size > config.GetShardSize() || !enoughSpaceInShard && config.GetPolicy() == nil
+func CantFitInShard(shardSize, shardNum int, size int) bool {
+	enoughSpaceInShard := keymaps.EnoughSpaceInShard(shardNum, size)
+	return size > shardSize || !enoughSpaceInShard && config.GetPolicy() == nil
 }

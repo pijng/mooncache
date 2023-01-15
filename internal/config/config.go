@@ -15,12 +15,14 @@ type configuration struct {
 var config configuration
 var once sync.Once
 
-func AssignConfig(shardSize, shardsAmount int, policy policy.Policy) {
+func Build(shardSize, shardsAmount int, policy policy.Policy) *configuration {
 	once.Do(func() {
 		config.ShardSize = shardSize
 		config.ShardsAmount = shardsAmount
 		config.Policy = policy
 	})
+
+	return &config
 }
 
 func GetConfig() *configuration {
