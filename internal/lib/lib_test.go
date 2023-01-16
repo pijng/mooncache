@@ -1,6 +1,7 @@
 package lib_test
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/pijng/mooncache/internal/config"
@@ -90,28 +91,28 @@ func TestValueSize(t *testing.T) {
 
 func TestCacheNotInitialized(t *testing.T) {
 	tests := []struct {
-		name    string
-		wantErr bool
+		name string
+		want error
 	}{
-		{"should return true", true},
+		{"should match error", fmt.Errorf("Cache is not initialized, call 'mooncace.New(...)' before calling appropriate methods, preferably during application initialization")},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			assert.Equal(t, true, lib.CacheNotInitialized())
+			assert.Equal(t, tt.want, lib.CacheNotInitialized())
 		})
 	}
 }
 
 func TestValueNotPresent(t *testing.T) {
 	tests := []struct {
-		name    string
-		wantErr bool
+		name string
+		want error
 	}{
-		{"should return true", true},
+		{"should match error", fmt.Errorf("Value  is not present in the cache")},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			assert.Equal(t, true, lib.ValueNotPresent())
+			assert.Equal(t, tt.want, lib.ValueNotPresent())
 		})
 	}
 }

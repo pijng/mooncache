@@ -12,8 +12,7 @@ func ValueSize(value interface{}) int {
 }
 
 func CacheNotInitialized() error {
-	return fmt.Errorf(`Cache is not initialized, call 'mooncace.New(...)' before calling appropriate methods, "
-										preferably during application initialization`)
+	return fmt.Errorf(`Cache is not initialized, call 'mooncace.New(...)' before calling appropriate methods, preferably during application initialization`)
 }
 
 func ValueNotPresent() error {
