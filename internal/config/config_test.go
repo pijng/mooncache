@@ -39,7 +39,7 @@ func TestBuild(t *testing.T) {
 }
 
 func TestConfig(t *testing.T) {
-	configuration := config.Build(1<<10, 4, policy.FIFO)
+	config.Build(1<<10, 4, policy.FIFO)
 
 	tests := []struct {
 		name string
@@ -49,6 +49,7 @@ func TestConfig(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			configuration := config.Config()
 			assert.Equal(t, tt.want.ShardSize, configuration.ShardSize)
 			assert.Equal(t, tt.want.ShardsAmount, configuration.ShardsAmount)
 			assert.Equal(t, tt.want.Policy(), configuration.Policy())

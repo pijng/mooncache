@@ -87,3 +87,31 @@ func TestValueSize(t *testing.T) {
 		})
 	}
 }
+
+func TestCacheNotInitialized(t *testing.T) {
+	tests := []struct {
+		name    string
+		wantErr bool
+	}{
+		{"should return true", true},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			assert.Equal(t, true, lib.CacheNotInitialized())
+		})
+	}
+}
+
+func TestValueNotPresent(t *testing.T) {
+	tests := []struct {
+		name    string
+		wantErr bool
+	}{
+		{"should return true", true},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			assert.Equal(t, true, lib.ValueNotPresent())
+		})
+	}
+}
