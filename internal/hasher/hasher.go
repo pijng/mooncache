@@ -6,11 +6,11 @@ const (
 	pow2     = float64(int64(1) << 31)
 )
 
-func SumWithNum(key string, shardsAmount int) (uint64, int) {
-	hashedKey := Sum(key)
-	index := JCH(hashedKey, shardsAmount)
+func SumWithNum(key string, shardsAmount int) (sum uint64, num int) {
+	sum = Sum(key)
+	num = JCH(sum, shardsAmount)
 
-	return hashedKey, index
+	return sum, num
 }
 
 func Sum(key string) uint64 {

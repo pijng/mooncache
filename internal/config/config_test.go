@@ -1,7 +1,6 @@
 package config_test
 
 import (
-	"reflect"
 	"testing"
 
 	"github.com/pijng/mooncache/internal/config"
@@ -31,6 +30,7 @@ func TestBuild(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			config := config.Build(tt.args.shardSize, tt.args.shardsAmount, tt.args.policy)
+
 			assert.Equal(t, tt.args.shardsAmount, config.ShardsAmount)
 			assert.Equal(t, tt.args.shardSize, config.ShardSize)
 			assert.Equal(t, tt.args.policy(), config.Policy())
@@ -39,7 +39,7 @@ func TestBuild(t *testing.T) {
 }
 
 func TestConfig(t *testing.T) {
-	config.Build(1<<10, 4, policy.FIFO)
+	configuration := config.Build(1<<10, 4, policy.FIFO)
 
 	tests := []struct {
 		name string
@@ -49,8 +49,6 @@ func TestConfig(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			configuration := config.Config()
-
 			assert.Equal(t, tt.want.ShardSize, configuration.ShardSize)
 			assert.Equal(t, tt.want.ShardsAmount, configuration.ShardsAmount)
 			assert.Equal(t, tt.want.Policy(), configuration.Policy())
@@ -69,9 +67,7 @@ func TestShardSize(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := config.ShardSize(); got != tt.want {
-				t.Errorf("ShardSize() = %v, want %v", got, tt.want)
-			}
+			assert.Equal(t, tt.want, config.ShardSize())
 		})
 	}
 }
@@ -87,9 +83,7 @@ func TestShardsAmount(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := config.ShardsAmount(); got != tt.want {
-				t.Errorf("ShardsAmount() = %v, want %v", got, tt.want)
-			}
+			assert.Equal(t, tt.want, config.ShardsAmount())
 		})
 	}
 }
@@ -105,9 +99,7 @@ func TestPolicy(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := config.Policy(); !reflect.DeepEqual(got(), tt.want()) {
-				t.Errorf("Policy() = %v, want %v", got, tt.want)
-			}
+			assert.Equal(t, tt.want(), config.Policy()())
 		})
 	}
 }

@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/pijng/mooncache/internal/hasher"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestSumWithNum(t *testing.T) {
@@ -12,22 +13,18 @@ func TestSumWithNum(t *testing.T) {
 		shardsAmount int
 	}
 	tests := []struct {
-		name  string
-		args  args
-		want  uint64
-		want1 int
+		name    string
+		args    args
+		wantSum uint64
+		wantNum int
 	}{
 		{"key should be 2546886805339723447 and num should be 2", args{key: "reports/sales", shardsAmount: 4}, 2546886805339723447, 2},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, got1 := hasher.SumWithNum(tt.args.key, tt.args.shardsAmount)
-			if got != tt.want {
-				t.Errorf("SumWithNum() key = %v, want %v", got, tt.want)
-			}
-			if got1 != tt.want1 {
-				t.Errorf("SumWithNum() num = %v, want %v", got1, tt.want1)
-			}
+			sum, num := hasher.SumWithNum(tt.args.key, tt.args.shardsAmount)
+			assert.Equal(t, tt.wantSum, sum)
+			assert.Equal(t, tt.wantNum, num)
 		})
 	}
 }
@@ -45,9 +42,8 @@ func TestSum(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := hasher.Sum(tt.args.key); got != tt.want {
-				t.Errorf("Sum() = %v, want %v", got, tt.want)
-			}
+			sum := hasher.Sum(tt.args.key)
+			assert.Equal(t, tt.want, sum)
 		})
 	}
 }
@@ -66,9 +62,8 @@ func TestJCH(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := hasher.JCH(tt.args.hashedKey, tt.args.shardsAmount); got != tt.want {
-				t.Errorf("JCH() = %v, want %v", got, tt.want)
-			}
+			num := hasher.JCH(tt.args.hashedKey, tt.args.shardsAmount)
+			assert.Equal(t, tt.want, num)
 		})
 	}
 }

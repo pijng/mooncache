@@ -30,9 +30,8 @@ func TestCantFitInShard(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := lib.CantFitInShard(tt.args.shardSize, tt.args.shardNum, tt.args.size); got != tt.want {
-				t.Errorf("CantFitInShard() = %v, want %v", got, tt.want)
-			}
+			cantFitInShard := lib.CantFitInShard(tt.args.shardSize, tt.args.shardNum, tt.args.size)
+			assert.Equal(t, tt.want, cantFitInShard)
 		})
 	}
 }
@@ -58,9 +57,8 @@ func TestCantFitInShardWithPolicy(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := lib.CantFitInShard(tt.args.shardSize, tt.args.shardNum, tt.args.size); got != tt.want {
-				t.Errorf("CantFitInShard() = %v, want %v", got, tt.want)
-			}
+			cantFitInShard := lib.CantFitInShard(tt.args.shardSize, tt.args.shardNum, tt.args.size)
+			assert.Equal(t, tt.want, cantFitInShard)
 		})
 	}
 }
