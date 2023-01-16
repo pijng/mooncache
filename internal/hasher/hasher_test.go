@@ -38,7 +38,7 @@ func TestSum(t *testing.T) {
 		args args
 		want uint64
 	}{
-		{"key should be 565", args{key: "Pelinal Whitestrake is a cyborg proofs"}, 14388442895772204505},
+		{"key should be 14388442895772204505", args{key: "Pelinal Whitestrake is a cyborg proofs"}, 14388442895772204505},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

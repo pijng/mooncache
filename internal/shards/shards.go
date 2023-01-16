@@ -8,6 +8,7 @@ import (
 	"github.com/pijng/mooncache/internal/keymaps"
 	"github.com/pijng/mooncache/internal/lib"
 	"github.com/pijng/mooncache/internal/policy"
+	"github.com/pijng/mooncache/internal/queue"
 )
 
 type shard []interface{}
@@ -23,7 +24,13 @@ func Build(amount int) {
 
 // Set ...
 func Set(key string, value interface{}, cost int, ttl int64) error {
-	return set(key, hasher.Sum(key), value, cost, ttl)
+	hashedKey := hasher.Sum(key)
+
+	queue.Set(hashedKey)
+	err := set(key, hashedKey, value, cost, ttl)
+	queue.Release(hashedKey)
+
+	return err
 }
 
 func set(key string, hashedKey uint64, value interface{}, cost int, ttl int64) error {
@@ -55,7 +62,12 @@ func pushToShard(shardNum int, hashedKey uint64, value interface{}, size, cost i
 
 // Get ...
 func Get(key string) (interface{}, error) {
-	return get(hasher.Sum(key))
+	hashedKey := hasher.Sum(key)
+	if transaction := queue.Get(hashedKey); transaction != nil {
+		transaction.Wait()
+	}
+
+	return get(hashedKey)
 }
 
 func get(key uint64) (interface{}, error) {
