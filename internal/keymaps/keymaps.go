@@ -51,14 +51,14 @@ func Build(shardsAmount, shardSize int) {
 	}
 }
 
-func set[K int | uint64, V int | int64](key K, value V, hm hashmap[K, V]) {
+func set[K int | uint64, V int | int64](hm hashmap[K, V], key K, value V) {
 	hm.Mux.Lock()
 	defer hm.Mux.Unlock()
 
 	hm.M[key] = &value
 }
 
-func get[K int | uint64, V int | int64](key K, hm hashmap[K, V]) (V, bool) {
+func get[K int | uint64, V int | int64](hm hashmap[K, V], key K) (V, bool) {
 	hm.Mux.RLock()
 	defer hm.Mux.RUnlock()
 
@@ -69,7 +69,7 @@ func get[K int | uint64, V int | int64](key K, hm hashmap[K, V]) (V, bool) {
 	return *v, ok
 }
 
-func remove[K int | uint64, V int | int64](key K, hm hashmap[K, V]) {
+func remove[K int | uint64, V int | int64](hm hashmap[K, V], key K) {
 	hm.Mux.Lock()
 	defer hm.Mux.Unlock()
 
@@ -77,43 +77,43 @@ func remove[K int | uint64, V int | int64](key K, hm hashmap[K, V]) {
 }
 
 func AddKey(key uint64, index, shardNum, size, cost int, ttl int64) {
-	set(key, index, keyIndexes)
-	set(key, cost, valueCosts)
-	set(key, ttl, valueTTLs)
+	set(keyIndexes, key, index)
+	set(valueCosts, key, cost)
+	set(valueTTLs, key, ttl)
 
 	decrementShardVolume(shardNum, size)
 
-	set(key, size, valueSizes)
-	set(key, shardNum, keyShardNums)
-	set(key, 0, keyPolicyAttrs)
+	set(valueSizes, key, size)
+	set(keyShardNums, key, shardNum)
+	set(keyPolicyAttrs, key, 0)
 }
 
 func DelKey(key uint64) {
-	remove(key, keyIndexes)
-	remove(key, valueCosts)
-	remove(key, valueTTLs)
+	remove(keyIndexes, key)
+	remove(valueCosts, key)
+	remove(valueTTLs, key)
 
 	incrementShardVolume(keyShardNum(key), valueSize(key))
 
-	remove(key, valueSizes)
-	remove(key, keyShardNums)
-	remove(key, keyPolicyAttrs)
+	remove(valueSizes, key)
+	remove(keyShardNums, key)
+	remove(keyPolicyAttrs, key)
 }
 
 func decrementShardVolume(shardNum, size int) {
 	// shardVolume at the given shardNum is always present
-	currentVolume, _ := get(shardNum, shardVolumes)
-	set(shardNum, currentVolume-size, shardVolumes)
+	currentVolume, _ := get(shardVolumes, shardNum)
+	set(shardVolumes, shardNum, currentVolume-size)
 }
 
 func incrementShardVolume(shardNum, size int) {
 	// shardVolume at the given shardNum is always present
-	currentVolume, _ := get(shardNum, shardVolumes)
-	set(shardNum, currentVolume+size, shardVolumes)
+	currentVolume, _ := get(shardVolumes, shardNum)
+	set(shardVolumes, shardNum, currentVolume+size)
 }
 
 func KeyIndex(key uint64) (int, bool) {
-	index, ok := get(key, keyIndexes)
+	index, ok := get(keyIndexes, key)
 	if !ok {
 		return 0, false
 	}
@@ -122,7 +122,7 @@ func KeyIndex(key uint64) (int, bool) {
 }
 
 func valueSize(key uint64) int {
-	size, ok := get(key, valueSizes)
+	size, ok := get(valueSizes, key)
 	if !ok {
 		return 0
 	}
@@ -131,7 +131,7 @@ func valueSize(key uint64) int {
 }
 
 func valueCost(key uint64) int {
-	cost, ok := get(key, valueCosts)
+	cost, ok := get(valueCosts, key)
 	if !ok {
 		return 0
 	}
@@ -161,7 +161,7 @@ func StaleKeys() []uint64 {
 }
 
 func keyShardNum(key uint64) int {
-	shardNum, ok := get(key, keyShardNums)
+	shardNum, ok := get(keyShardNums, key)
 	if !ok {
 		return 0
 	}
@@ -170,11 +170,11 @@ func keyShardNum(key uint64) int {
 }
 
 func SetKeyPolicyAttr(key uint64, attr int64) {
-	set(key, attr, keyPolicyAttrs)
+	set(keyPolicyAttrs, key, attr)
 }
 
 func KeyPolicyAttr(key uint64) (int64, bool) {
-	attr, ok := get(key, keyPolicyAttrs)
+	attr, ok := get(keyPolicyAttrs, key)
 	if !ok {
 		return 0, false
 	}
@@ -188,7 +188,7 @@ func EnoughSpaceInShard(shardNum, size int) bool {
 }
 
 func ShardVolume(shardNum int) int {
-	volume, _ := get(shardNum, shardVolumes)
+	volume, _ := get(shardVolumes, shardNum)
 	return volume
 }
 
