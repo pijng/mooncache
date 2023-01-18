@@ -19,26 +19,32 @@ const (
 type Policy func() Variant
 
 var getKeyByPolicy func() uint64
-var UpdateKeyAttrByPolicy func(uint64)
+var updater func(uint64)
 
 func Build(variant Variant) {
 	switch variant {
 	case _LRU:
 		getKeyByPolicy = keymaps.KeyByMinPolicyAttr
-		UpdateKeyAttrByPolicy = updateKeyAttrByTime
+		updater = updateKeyAttrByTime
 	case _LFU:
 		getKeyByPolicy = keymaps.KeyByMinPolicyAttr
-		UpdateKeyAttrByPolicy = updateKeyAttrByCount
+		updater = updateKeyAttrByCount
 	case _MRU:
 		getKeyByPolicy = keymaps.KeyByMaxPolicyAttr
-		UpdateKeyAttrByPolicy = updateKeyAttrByTime
+		updater = updateKeyAttrByTime
 	case _MFU:
 		getKeyByPolicy = keymaps.KeyByMaxPolicyAttr
-		UpdateKeyAttrByPolicy = updateKeyAttrByCount
+		updater = updateKeyAttrByCount
 	case _FIFO:
 		getKeyByPolicy = keymaps.KeyByMinIndex
+		updater = func(u uint64) {}
 	default:
+		updater = func(u uint64) {}
 	}
+}
+
+func UpdateKeyAttrByPolicy(key uint64) {
+	updater(key)
 }
 
 func updateKeyAttrByTime(key uint64) {

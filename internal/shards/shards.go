@@ -82,9 +82,7 @@ func get(key uint64) (interface{}, error) {
 		return nil, lib.ValueNotPresent()
 	}
 
-	if policy.UpdateKeyAttrByPolicy != nil {
-		policy.UpdateKeyAttrByPolicy(key)
-	}
+	policy.UpdateKeyAttrByPolicy(key)
 
 	value := shards[shardNum][index]
 	return value, nil
