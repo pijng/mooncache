@@ -15,11 +15,13 @@ type shard []interface{}
 
 var shards []shard
 
-func Build(amount int) {
+func Build(amount int) *[]shard {
 	shards = make([]shard, amount)
 	for n := 0; n < amount; n++ {
 		shards[n] = make(shard, 0)
 	}
+
+	return &shards
 }
 
 // Set ...
