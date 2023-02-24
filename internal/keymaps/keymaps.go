@@ -208,7 +208,7 @@ func KeyByMinPolicyAttr() uint64 {
 		currentAttr := *attr
 		currentCost := valueCost(key)
 
-		if currentAttr < minValue && currentCost <= minCost {
+		if currentAttr <= minValue && currentCost <= minCost {
 			minValue = currentAttr
 			minCost = currentCost
 			hash = key
@@ -230,7 +230,7 @@ func KeyByMaxPolicyAttr() uint64 {
 		currentAttr := *attr
 		currentCost := valueCost(key)
 
-		if currentAttr > maxValue && currentCost >= maxCost {
+		if currentAttr >= maxValue && currentCost >= maxCost {
 			maxValue = currentAttr
 			maxCost = currentCost
 			hash = key
@@ -252,7 +252,7 @@ func KeyByMinIndex() uint64 {
 		currentAttr := *attr
 		currentCost := valueCost(key)
 
-		if currentAttr < minIndex && currentCost <= maxCost {
+		if currentAttr <= minIndex && currentCost <= maxCost {
 			minIndex = currentAttr
 			maxCost = currentCost
 			hash = key
