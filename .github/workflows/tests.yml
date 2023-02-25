@@ -15,7 +15,7 @@ jobs:
       - uses: actions/setup-go@v3
       - name: 'Unit tests'
         run: |
-              go test ./... -race -coverprofile coverage.out -covermode atomic
+              go test ./... -race -shuffle on -coverprofile coverage.out -covermode atomic
               go tool cover -func coverage.out
       - name: Quality Gate - Test coverage shall be above threshold
         env:
