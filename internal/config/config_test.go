@@ -10,9 +10,9 @@ import (
 
 func TestBuild(t *testing.T) {
 	type args struct {
-		shardSize    int
-		shardsAmount int
 		policy       policy.Policy
+		shardSize    int
+		shardsAmount int8
 	}
 
 	configArgs := args{
@@ -78,7 +78,7 @@ func TestShardsAmount(t *testing.T) {
 
 	tests := []struct {
 		name string
-		want int
+		want int8
 	}{
 		{"should be 8", 8},
 	}

@@ -24,7 +24,7 @@ func buildCache(policyVariant policy.Policy) {
 
 func TestBuild(t *testing.T) {
 	type args struct {
-		amount int
+		amount int8
 	}
 	tests := []struct {
 		name string
@@ -36,7 +36,7 @@ func TestBuild(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			shards := Build(tt.args.amount)
 
-			assert.Equal(t, tt.args.amount, len(*shards))
+			assert.Equal(t, tt.args.amount, int8(len(*shards)))
 		})
 	}
 }
@@ -50,7 +50,7 @@ func TestSet(t *testing.T) {
 	type args struct {
 		key   string
 		value interface{}
-		cost  int
+		cost  int16
 		ttl   int64
 	}
 	tests := []struct {
@@ -77,7 +77,7 @@ func TestSetToFullShardWithPolicy(t *testing.T) {
 	type args struct {
 		key   string
 		value interface{}
-		cost  int
+		cost  int16
 		ttl   int64
 	}
 	tests := []struct {
@@ -118,7 +118,7 @@ func TestSetToFullShardWithoutPolicy(t *testing.T) {
 	type args struct {
 		key   string
 		value interface{}
-		cost  int
+		cost  int16
 		ttl   int64
 	}
 	tests := []struct {
@@ -159,7 +159,7 @@ func TestGet(t *testing.T) {
 	type args struct {
 		key   string
 		value value
-		cost  int
+		cost  int16
 		ttl   int64
 	}
 	wantValue := "01001111 01101000 00111111 00100000 01011001 01101111 01110101 00100111 01110010 01100101 00100000 01000001 01110000 01110000 01110010 01101111 01100001 01100011 01101000 01101001 01101110 01100111 00100000 01001101 01100101 00111111"
@@ -199,7 +199,7 @@ func TestDel(t *testing.T) {
 	type args struct {
 		key   string
 		value interface{}
-		cost  int
+		cost  int16
 		ttl   int64
 	}
 	wantValue := "01001111 01101000 00111111 00100000 01011001 01101111 01110101 00100111 01110010 01100101 00100000 01000001 01110000 01110000 01110010 01101111 01100001 01100011 01101000 01101001 01101110 01100111 00100000 01001101 01100101 00111111"
@@ -232,7 +232,7 @@ func TestDelByHash(t *testing.T) {
 	type args struct {
 		key   string
 		value interface{}
-		cost  int
+		cost  int16
 		ttl   int64
 	}
 	wantValue := "01001111 01101000 00111111 00100000 01011001 01101111 01110101 00100111 01110010 01100101 00100000 01000001 01110000 01110000 01110010 01101111 01100001 01100011 01101000 01101001 01101110 01100111 00100000 01001101 01100101 00111111"

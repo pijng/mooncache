@@ -6,59 +6,59 @@ import (
 	"time"
 )
 
-type hashmap[K int | uint64, T int | int64] struct {
+type hashmap[K int | uint64, T int | int16 | int64] struct {
 	Mux *sync.RWMutex
-	M   map[K]*T
+	M   map[K]T
 }
 
 var shardVolumes hashmap[int, int]
-var keyIndexes hashmap[uint64, int]
-var keyShardNums hashmap[uint64, int]
+var indexes hashmap[uint64, int]
+var shardNums hashmap[uint64, int]
 var valueSizes hashmap[uint64, int]
-var valueCosts hashmap[uint64, int]
+var valueCosts hashmap[uint64, int16]
 var valueTTLs hashmap[uint64, int64]
-var keyPolicyAttrs hashmap[uint64, int64]
+var policyAttrs hashmap[uint64, int64]
 
 var shardLocks map[int]*sync.RWMutex
 
-func Build(shardsAmount, shardSize int) {
+func Build(shardsAmount int8, shardSize int) {
 	shardVolumes.Mux = &sync.RWMutex{}
-	shardVolumes.M = make(map[int]*int)
+	shardVolumes.M = make(map[int]int)
 
-	keyIndexes.Mux = &sync.RWMutex{}
-	keyIndexes.M = make(map[uint64]*int)
+	indexes.Mux = &sync.RWMutex{}
+	indexes.M = make(map[uint64]int)
 
-	keyShardNums.Mux = &sync.RWMutex{}
-	keyShardNums.M = make(map[uint64]*int)
+	shardNums.Mux = &sync.RWMutex{}
+	shardNums.M = make(map[uint64]int)
 
 	valueSizes.Mux = &sync.RWMutex{}
-	valueSizes.M = make(map[uint64]*int)
+	valueSizes.M = make(map[uint64]int)
 
 	valueCosts.Mux = &sync.RWMutex{}
-	valueCosts.M = make(map[uint64]*int)
+	valueCosts.M = make(map[uint64]int16)
 
 	valueTTLs.Mux = &sync.RWMutex{}
-	valueTTLs.M = make(map[uint64]*int64)
+	valueTTLs.M = make(map[uint64]int64)
 
-	keyPolicyAttrs.Mux = &sync.RWMutex{}
-	keyPolicyAttrs.M = make(map[uint64]*int64)
+	policyAttrs.Mux = &sync.RWMutex{}
+	policyAttrs.M = make(map[uint64]int64)
 
 	shardLocks = make(map[int]*sync.RWMutex)
 
-	for n := 0; n < shardsAmount; n++ {
-		shardVolumes.M[n] = &shardSize
+	for n := 0; n < int(shardsAmount); n++ {
+		shardVolumes.M[n] = shardSize
 		shardLocks[n] = &sync.RWMutex{}
 	}
 }
 
-func set[K int | uint64, V int | int64](hm hashmap[K, V], key K, value V) {
+func set[K int | uint64, V int | int16 | int64](hm hashmap[K, V], key K, value V) {
 	hm.Mux.Lock()
 	defer hm.Mux.Unlock()
 
-	hm.M[key] = &value
+	hm.M[key] = value
 }
 
-func get[K int | uint64, V int | int64](hm hashmap[K, V], key K) (V, bool) {
+func get[K int | uint64, V int | int16 | int64](hm hashmap[K, V], key K) (V, bool) {
 	hm.Mux.RLock()
 	defer hm.Mux.RUnlock()
 
@@ -66,38 +66,38 @@ func get[K int | uint64, V int | int64](hm hashmap[K, V], key K) (V, bool) {
 	if !ok {
 		return *new(V), false
 	}
-	return *v, ok
+	return v, ok
 }
 
-func remove[K int | uint64, V int | int64](hm hashmap[K, V], key K) {
+func remove[K int | uint64, V int | int16 | int64](hm hashmap[K, V], key K) {
 	hm.Mux.Lock()
 	defer hm.Mux.Unlock()
 
 	delete(hm.M, key)
 }
 
-func AddKey(key uint64, index, shardNum, size, cost int, ttl int64) {
-	set(keyIndexes, key, index)
+func AddKey(key uint64, index, shardNum, size int, cost int16, ttl int64) {
+	set(indexes, key, index)
 	set(valueCosts, key, cost)
 	set(valueTTLs, key, ttl)
 
 	decrementShardVolume(shardNum, size)
 
 	set(valueSizes, key, size)
-	set(keyShardNums, key, shardNum)
-	set(keyPolicyAttrs, key, 0)
+	set(shardNums, key, shardNum)
+	set(policyAttrs, key, 0)
 }
 
 func DelKey(key uint64) {
-	remove(keyIndexes, key)
+	remove(indexes, key)
 	remove(valueCosts, key)
 	remove(valueTTLs, key)
 
-	incrementShardVolume(keyShardNum(key), valueSize(key))
+	incrementShardVolume(getShardNum(key), getValueSize(key))
 
 	remove(valueSizes, key)
-	remove(keyShardNums, key)
-	remove(keyPolicyAttrs, key)
+	remove(shardNums, key)
+	remove(policyAttrs, key)
 }
 
 func decrementShardVolume(shardNum, size int) {
@@ -112,8 +112,8 @@ func incrementShardVolume(shardNum, size int) {
 	set(shardVolumes, shardNum, currentVolume+size)
 }
 
-func KeyIndex(key uint64) (int, bool) {
-	index, ok := get(keyIndexes, key)
+func GetIndex(key uint64) (int, bool) {
+	index, ok := get(indexes, key)
 	if !ok {
 		return 0, false
 	}
@@ -121,7 +121,7 @@ func KeyIndex(key uint64) (int, bool) {
 	return index, true
 }
 
-func valueSize(key uint64) int {
+func getValueSize(key uint64) int {
 	size, ok := get(valueSizes, key)
 	if !ok {
 		return 0
@@ -130,7 +130,7 @@ func valueSize(key uint64) int {
 	return size
 }
 
-func valueCost(key uint64) int {
+func getValueCost(key uint64) int16 {
 	cost, ok := get(valueCosts, key)
 	if !ok {
 		return 0
@@ -139,11 +139,7 @@ func valueCost(key uint64) int {
 	return cost
 }
 
-func ValueTTLs() *hashmap[uint64, int64] {
-	return &valueTTLs
-}
-
-func StaleKeys() []uint64 {
+func GetStaleKeys() []uint64 {
 	now := time.Now().Unix()
 	stale := make([]uint64, 0)
 
@@ -151,17 +147,16 @@ func StaleKeys() []uint64 {
 	defer valueTTLs.Mux.Unlock()
 
 	for key, valueTTL := range valueTTLs.M {
-		if *valueTTL > now {
-			continue
+		if valueTTL < now {
+			stale = append(stale, key)
 		}
-		stale = append(stale, key)
 	}
 
 	return stale
 }
 
-func keyShardNum(key uint64) int {
-	shardNum, ok := get(keyShardNums, key)
+func getShardNum(key uint64) int {
+	shardNum, ok := get(shardNums, key)
 	if !ok {
 		return 0
 	}
@@ -169,12 +164,12 @@ func keyShardNum(key uint64) int {
 	return shardNum
 }
 
-func SetKeyPolicyAttr(key uint64, attr int64) {
-	set(keyPolicyAttrs, key, attr)
+func SetPolicyAttr(key uint64, attr int64) {
+	set(policyAttrs, key, attr)
 }
 
-func KeyPolicyAttr(key uint64) (int64, bool) {
-	attr, ok := get(keyPolicyAttrs, key)
+func GetPolicyAttr(key uint64) (int64, bool) {
+	attr, ok := get(policyAttrs, key)
 	if !ok {
 		return 0, false
 	}
@@ -183,33 +178,34 @@ func KeyPolicyAttr(key uint64) (int64, bool) {
 }
 
 func EnoughSpaceInShard(shardNum, size int) bool {
-	volume := ShardVolume(shardNum)
+	volume := GetShardVolume(shardNum)
 	return volume >= size
 }
 
-func ShardVolume(shardNum int) int {
+func GetShardVolume(shardNum int) int {
 	volume, _ := get(shardVolumes, shardNum)
 	return volume
 }
 
-func ShardLock(shardNum int) *sync.RWMutex {
+func GetShardLock(shardNum int) *sync.RWMutex {
 	return shardLocks[shardNum]
 }
 
-func KeyByMinPolicyAttr() uint64 {
+func GetKeyByMinPolicyAttr() uint64 {
 	var hash uint64
-	minCost := math.MaxInt
+	var currentCost int16
+
+	minCost := int16(math.MaxInt16)
 	minValue := int64(math.MaxInt64)
 
-	keyPolicyAttrs.Mux.RLock()
-	defer keyPolicyAttrs.Mux.RUnlock()
+	policyAttrs.Mux.RLock()
+	defer policyAttrs.Mux.RUnlock()
 
-	for key, attr := range keyPolicyAttrs.M {
-		currentAttr := *attr
-		currentCost := valueCost(key)
+	for key, attr := range policyAttrs.M {
+		currentCost = getValueCost(key)
 
-		if currentAttr <= minValue && currentCost <= minCost {
-			minValue = currentAttr
+		if attr <= minValue && currentCost <= minCost {
+			minValue = attr
 			minCost = currentCost
 			hash = key
 		}
@@ -218,20 +214,19 @@ func KeyByMinPolicyAttr() uint64 {
 	return hash
 }
 
-func KeyByMaxPolicyAttr() uint64 {
+func GetKeyByMaxPolicyAttr() uint64 {
 	var hash uint64
-	var maxCost int
+	var maxCost int16
 	var maxValue int64
 
-	keyPolicyAttrs.Mux.RLock()
-	defer keyPolicyAttrs.Mux.RUnlock()
+	policyAttrs.Mux.RLock()
+	defer policyAttrs.Mux.RUnlock()
 
-	for key, attr := range keyPolicyAttrs.M {
-		currentAttr := *attr
-		currentCost := valueCost(key)
+	for key, attr := range policyAttrs.M {
+		currentCost := getValueCost(key)
 
-		if currentAttr >= maxValue && currentCost >= maxCost {
-			maxValue = currentAttr
+		if attr >= maxValue && currentCost >= maxCost {
+			maxValue = attr
 			maxCost = currentCost
 			hash = key
 		}
@@ -240,20 +235,19 @@ func KeyByMaxPolicyAttr() uint64 {
 	return hash
 }
 
-func KeyByMinIndex() uint64 {
+func GetKeyByMinIndex() uint64 {
 	var hash uint64
-	maxCost := math.MaxInt
+	maxCost := int16(math.MaxInt16)
 	minIndex := int(math.MaxInt64)
 
-	keyPolicyAttrs.Mux.RLock()
-	defer keyPolicyAttrs.Mux.RUnlock()
+	policyAttrs.Mux.RLock()
+	defer policyAttrs.Mux.RUnlock()
 
-	for key, attr := range keyIndexes.M {
-		currentAttr := *attr
-		currentCost := valueCost(key)
+	for key, attr := range indexes.M {
+		currentCost := getValueCost(key)
 
-		if currentAttr <= minIndex && currentCost <= maxCost {
-			minIndex = currentAttr
+		if attr <= minIndex && currentCost <= maxCost {
+			minIndex = attr
 			maxCost = currentCost
 			hash = key
 		}

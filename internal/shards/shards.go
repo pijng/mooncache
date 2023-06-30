@@ -15,9 +15,9 @@ type shard []interface{}
 
 var shards []shard
 
-func Build(amount int) *[]shard {
+func Build(amount int8) *[]shard {
 	shards = make([]shard, amount)
-	for n := 0; n < amount; n++ {
+	for n := 0; n < int(amount); n++ {
 		shards[n] = make(shard, 0)
 	}
 
@@ -25,7 +25,7 @@ func Build(amount int) *[]shard {
 }
 
 // Set ...
-func Set(key string, value interface{}, cost int, ttl int64) error {
+func Set(key string, value interface{}, cost int16, ttl int64) error {
 	hashedKey := hasher.Sum(key)
 
 	queue.Set(hashedKey)
@@ -35,18 +35,18 @@ func Set(key string, value interface{}, cost int, ttl int64) error {
 	return err
 }
 
-func set(key string, hashedKey uint64, value interface{}, cost int, ttl int64) error {
-	shardNum := hasher.JCH(hashedKey, len(shards))
+func set(key string, hashedKey uint64, value interface{}, cost int16, ttl int64) error {
+	shardNum := hasher.JCH(hashedKey, int8(len(shards)))
 	size := lib.ValueSize(value)
 
 	if lib.CantFitInShard(config.ShardSize(), shardNum, size) {
 		return fmt.Errorf("Can't fit value for `%v` key – not enough shard volume: value has `%v` size out of `%v` for shard[%v]",
-			key, size, keymaps.ShardVolume(shardNum), shardNum)
+			key, size, keymaps.GetShardVolume(shardNum), shardNum)
 	}
 
 	policy.EvictUntilCanFit(size, shardNum, DelByHash)
 
-	lock := keymaps.ShardLock(shardNum)
+	lock := keymaps.GetShardLock(shardNum)
 	lock.Lock()
 	defer lock.Unlock()
 
@@ -55,7 +55,7 @@ func set(key string, hashedKey uint64, value interface{}, cost int, ttl int64) e
 	return nil
 }
 
-func pushToShard(shardNum int, hashedKey uint64, value interface{}, size, cost int, ttl int64) {
+func pushToShard(shardNum int, hashedKey uint64, value interface{}, size int, cost int16, ttl int64) {
 	index := len(shards[shardNum])
 	shards[shardNum] = append(shards[shardNum], value)
 
@@ -73,13 +73,13 @@ func Get(key string) (interface{}, error) {
 }
 
 func get(key uint64) (interface{}, error) {
-	shardNum := hasher.JCH(key, len(shards))
+	shardNum := hasher.JCH(key, int8(len(shards)))
 
-	lock := keymaps.ShardLock(shardNum)
+	lock := keymaps.GetShardLock(shardNum)
 	lock.RLock()
 	defer lock.RUnlock()
 
-	index, ok := keymaps.KeyIndex(key)
+	index, ok := keymaps.GetIndex(key)
 	if !ok {
 		return nil, lib.ValueNotPresent()
 	}
@@ -96,13 +96,13 @@ func Del(key string) {
 }
 
 func DelByHash(key uint64) {
-	shardNum := hasher.JCH(key, len(shards))
+	shardNum := hasher.JCH(key, int8(len(shards)))
 
-	lock := keymaps.ShardLock(shardNum)
+	lock := keymaps.GetShardLock(shardNum)
 	lock.RLock()
 	defer lock.RUnlock()
 
-	index, ok := keymaps.KeyIndex(key)
+	index, ok := keymaps.GetIndex(key)
 	if !ok {
 		return
 	}

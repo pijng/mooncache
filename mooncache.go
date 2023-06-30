@@ -11,6 +11,11 @@ import (
 	"github.com/pijng/mooncache/internal/shards"
 )
 
+type ItemOptions struct {
+	TTL  time.Duration
+	Cost int16
+}
+
 var once sync.Once
 
 // New ...
@@ -61,9 +66,10 @@ func Del(key string) error {
 	return nil
 }
 
-func getCostTTL(itemOptions []ItemOptions) (int, int64) {
-	var cost int
+func getCostTTL(itemOptions []ItemOptions) (int16, int64) {
+	var cost int16
 	ttl := int64(math.MaxInt64)
+
 	if len(itemOptions) > 0 {
 		options := itemOptions[0]
 		cost = options.Cost

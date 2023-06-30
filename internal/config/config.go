@@ -7,12 +7,12 @@ import (
 type Configuration struct {
 	Policy       policy.Policy
 	ShardSize    int
-	ShardsAmount int
+	ShardsAmount int8
 }
 
 var config Configuration
 
-func Build(shardSize, shardsAmount int, policy policy.Policy) *Configuration {
+func Build(shardSize int, shardsAmount int8, policy policy.Policy) *Configuration {
 	config.ShardSize = shardSize
 	config.ShardsAmount = shardsAmount
 	config.Policy = policy
@@ -28,7 +28,7 @@ func ShardSize() int {
 	return config.ShardSize
 }
 
-func ShardsAmount() int {
+func ShardsAmount() int8 {
 	return config.ShardsAmount
 }
 

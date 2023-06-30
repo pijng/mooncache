@@ -10,7 +10,7 @@ import (
 func TestSumWithNum(t *testing.T) {
 	type args struct {
 		key          string
-		shardsAmount int
+		shardsAmount int8
 	}
 	tests := []struct {
 		name    string
@@ -51,7 +51,7 @@ func TestSum(t *testing.T) {
 func TestJCH(t *testing.T) {
 	type args struct {
 		hashedKey    uint64
-		shardsAmount int
+		shardsAmount int8
 	}
 	tests := []struct {
 		name string

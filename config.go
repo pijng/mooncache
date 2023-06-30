@@ -8,7 +8,7 @@ import (
 type Config struct {
 	Policy       policy.Policy
 	ShardSize    int
-	ShardsAmount int
+	ShardsAmount int8
 }
 
 func buildConfig(c *Config) {

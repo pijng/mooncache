@@ -22,7 +22,7 @@ func worker() {
 }
 
 func evictOnTTL(now int64) {
-	staleKeys := keymaps.StaleKeys()
+	staleKeys := keymaps.GetStaleKeys()
 
 	for _, key := range staleKeys {
 		shards.DelByHash(key)

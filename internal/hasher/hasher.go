@@ -6,7 +6,7 @@ const (
 	pow2     = float64(int64(1) << 31)
 )
 
-func SumWithNum(key string, shardsAmount int) (sum uint64, num int) {
+func SumWithNum(key string, shardsAmount int8) (sum uint64, num int) {
 	sum = Sum(key)
 	num = JCH(sum, shardsAmount)
 
@@ -25,7 +25,7 @@ func Sum(key string) uint64 {
 
 // https://arxiv.org/pdf/1406.2294.pdf
 // dgryski golang implementation https://github.com/dgryski/go-jump/blob/master/jump.go
-func JCH(hashedKey uint64, shardsAmount int) int {
+func JCH(hashedKey uint64, shardsAmount int8) int {
 	var b int64 = -1
 	var j int64
 	key := hashedKey
