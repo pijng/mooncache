@@ -77,9 +77,21 @@ func New(config *Config) error {
 	return nil
 }
 
+func (c *cache) Set(key string, value interface{}, itemOptions ...ItemOptions) error {
+	return Set(key, value, itemOptions...)
+}
+
+func (c *cache) Get(key string) (interface{}, error) {
+	return Get(key)
+}
+
+func (c *cache) Del(key string) error {
+	return Del(key)
+}
+
 // Set ...
 func Set(key string, value interface{}, itemOptions ...ItemOptions) error {
-	if cluster.Config() == nil {
+	if cluster == nil {
 		return lib.CacheNotInitialized()
 	}
 
@@ -101,7 +113,7 @@ func Set(key string, value interface{}, itemOptions ...ItemOptions) error {
 
 // Get ...
 func Get(key string) (interface{}, error) {
-	if cluster.Config() == nil {
+	if cluster == nil {
 		return nil, lib.CacheNotInitialized()
 	}
 
@@ -110,7 +122,7 @@ func Get(key string) (interface{}, error) {
 
 // Del ...
 func Del(key string) error {
-	if cluster.Config() == nil {
+	if cluster == nil {
 		return lib.CacheNotInitialized()
 	}
 

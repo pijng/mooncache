@@ -19,7 +19,13 @@ func ValueNotPresent() error {
 	return fmt.Errorf("Value  is not present in the cache")
 }
 
-func CantFitInShard(km *keymaps.Keymaps, variant policy.Variant, shardSize, shardNum int, size int) bool {
+func NotEnoughSpace(km *keymaps.Keymaps, variant policy.Variant, shardSize, shardNum int, key string, size int) error {
 	enoughSpaceInShard := km.EnoughSpaceInShard(shardNum, size)
-	return size > shardSize || !enoughSpaceInShard && variant == ""
+
+	if size > shardSize || !enoughSpaceInShard && variant == "" {
+		return fmt.Errorf("Can't fit value for `%v` key – not enough shard volume: value has `%v` size out of `%v` for shard[%v]",
+			key, size, km.GetShardVolume(shardNum), shardNum)
+	}
+
+	return nil
 }

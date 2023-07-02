@@ -1,8 +1,6 @@
 package shards
 
 import (
-	"fmt"
-
 	"github.com/pijng/mooncache/internal/hasher"
 	"github.com/pijng/mooncache/internal/keymaps"
 	"github.com/pijng/mooncache/internal/lib"
@@ -54,9 +52,8 @@ func (s Shards) set(cluster cache, shardSize int, hashedKey uint64, item itemArg
 	km := cluster.Keymaps()
 	ps := cluster.PolicyService()
 
-	if lib.CantFitInShard(km, ps.Variant, shardSize, shardNum, size) {
-		return fmt.Errorf("Can't fit value for `%v` key – not enough shard volume: value has `%v` size out of `%v` for shard[%v]",
-			item.Key(), size, km.GetShardVolume(shardNum), shardNum)
+	if err := lib.NotEnoughSpace(km, ps.Variant, shardSize, shardNum, item.Key(), size); err != nil {
+		return err
 	}
 
 	ps.EvictUntilCanFit(km, size, shardNum, s.DelByHash)
