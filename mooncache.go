@@ -6,8 +6,11 @@ import (
 	"sync"
 	"time"
 
-	"github.com/pijng/mooncache/internal/config"
+	"github.com/pijng/mooncache/internal/eviction"
+	"github.com/pijng/mooncache/internal/keymaps"
 	"github.com/pijng/mooncache/internal/lib"
+	"github.com/pijng/mooncache/internal/policy"
+	"github.com/pijng/mooncache/internal/queue"
 	"github.com/pijng/mooncache/internal/shards"
 )
 
@@ -16,6 +19,33 @@ type ItemOptions struct {
 	Cost int16
 }
 
+type cache struct {
+	config  *Config
+	keymaps *keymaps.Keymaps
+	shards  shards.Shards
+	queue   *queue.Queue
+	policy  *policy.PolicyService
+}
+
+func (c *cache) Config() *Config               { return c.config }
+func (c *cache) Keymaps() *keymaps.Keymaps     { return c.keymaps }
+func (c *cache) Shards() shards.Shards         { return c.shards }
+func (c *cache) Queue() *queue.Queue           { return c.queue }
+func (c *cache) Policy() *policy.PolicyService { return c.policy }
+
+type itemArgs struct {
+	key   string
+	value interface{}
+	cost  int16
+	ttl   int64
+}
+
+func (i *itemArgs) Key() string        { return i.key }
+func (i *itemArgs) Value() interface{} { return i.value }
+func (i *itemArgs) Cost() int16        { return i.cost }
+func (i *itemArgs) TTL() int64         { return i.ttl }
+
+var cluster *cache
 var once sync.Once
 
 // New ...
@@ -25,7 +55,23 @@ func New(config *Config) error {
 	}
 
 	once.Do(func() {
-		buildCache(config)
+		km := keymaps.Build(config.ShardsAmount, config.ShardSize)
+		s := shards.Build(config.ShardsAmount)
+		q := queue.Build()
+
+		cluster = &cache{
+			config:  config,
+			keymaps: km,
+			shards:  s,
+			queue:   q,
+		}
+
+		if config.Algorithm() != "" {
+			policyService := policy.Build(cluster.Keymaps(), config.Algorithm())
+			cluster.policy = policyService
+		}
+
+		eviction.Run(cluster.Shards(), cluster.Keymaps())
 	})
 
 	return nil
@@ -33,13 +79,20 @@ func New(config *Config) error {
 
 // Set ...
 func Set(key string, value interface{}, itemOptions ...ItemOptions) error {
-	if config.Config() == nil {
+	if cluster.Config() == nil {
 		return lib.CacheNotInitialized()
 	}
 
 	cost, ttl := getCostTTL(itemOptions)
 
-	if err := shards.Set(key, value, cost, ttl); err != nil {
+	item := &itemArgs{
+		key:   key,
+		value: value,
+		cost:  cost,
+		ttl:   ttl,
+	}
+
+	if err := cluster.Shards().Set(cluster, cluster.Config().ShardSize, item); err != nil {
 		return err
 	}
 
@@ -48,20 +101,20 @@ func Set(key string, value interface{}, itemOptions ...ItemOptions) error {
 
 // Get ...
 func Get(key string) (interface{}, error) {
-	if config.Config() == nil {
+	if cluster.Config() == nil {
 		return nil, lib.CacheNotInitialized()
 	}
 
-	return shards.Get(key)
+	return cluster.Shards().Get(cluster, key)
 }
 
 // Del ...
 func Del(key string) error {
-	if config.Config() == nil {
+	if cluster.Config() == nil {
 		return lib.CacheNotInitialized()
 	}
 
-	shards.Del(key)
+	cluster.Shards().Del(cluster.Keymaps(), key)
 
 	return nil
 }

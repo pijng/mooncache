@@ -3,7 +3,6 @@ package shards
 import (
 	"fmt"
 
-	"github.com/pijng/mooncache/internal/config"
 	"github.com/pijng/mooncache/internal/hasher"
 	"github.com/pijng/mooncache/internal/keymaps"
 	"github.com/pijng/mooncache/internal/lib"
@@ -11,102 +10,115 @@ import (
 	"github.com/pijng/mooncache/internal/queue"
 )
 
-type shard []interface{}
+type cache interface {
+	Keymaps() *keymaps.Keymaps
+	Queue() *queue.Queue
+	Policy() *policy.PolicyService
+}
 
-var shards []shard
+type itemArgs interface {
+	Key() string
+	Value() interface{}
+	Cost() int16
+	TTL() int64
+}
 
-func Build(amount int8) *[]shard {
-	shards = make([]shard, amount)
+type Shards []Shard
+type Shard []interface{}
+
+func Build(amount int8) Shards {
+	shards := make(Shards, amount)
+
 	for n := 0; n < int(amount); n++ {
-		shards[n] = make(shard, 0)
+		shards[n] = make(Shard, 0)
 	}
 
-	return &shards
+	return shards
 }
 
 // Set ...
-func Set(key string, value interface{}, cost int16, ttl int64) error {
-	hashedKey := hasher.Sum(key)
+func (s Shards) Set(cluster cache, shardSize int, item itemArgs) error {
+	hashedKey := hasher.Sum(item.Key())
 
-	queue.Set(hashedKey)
-	err := set(key, hashedKey, value, cost, ttl)
-	queue.Release(hashedKey)
+	cluster.Queue().Set(hashedKey)
+	err := s.set(cluster, shardSize, hashedKey, item)
+	cluster.Queue().Release(hashedKey)
 
 	return err
 }
 
-func set(key string, hashedKey uint64, value interface{}, cost int16, ttl int64) error {
-	shardNum := hasher.JCH(hashedKey, int8(len(shards)))
-	size := lib.ValueSize(value)
+func (s Shards) set(cluster cache, shardSize int, hashedKey uint64, item itemArgs) error {
+	shardNum := hasher.JCH(hashedKey, int8(len(s)))
+	size := lib.ValueSize(item.Value())
 
-	if lib.CantFitInShard(config.ShardSize(), shardNum, size) {
+	km := cluster.Keymaps()
+	ps := cluster.Policy()
+
+	if lib.CantFitInShard(km, ps.Variant, shardSize, shardNum, size) {
 		return fmt.Errorf("Can't fit value for `%v` key – not enough shard volume: value has `%v` size out of `%v` for shard[%v]",
-			key, size, keymaps.GetShardVolume(shardNum), shardNum)
+			item.Key(), size, km.GetShardVolume(shardNum), shardNum)
 	}
 
-	policy.EvictUntilCanFit(size, shardNum, DelByHash)
+	ps.EvictUntilCanFit(km, size, shardNum, s.DelByHash)
 
-	lock := keymaps.GetShardLock(shardNum)
+	lock := km.GetShardLock(shardNum)
 	lock.Lock()
 	defer lock.Unlock()
 
-	pushToShard(shardNum, hashedKey, value, size, cost, ttl)
+	index := len(s[shardNum])
+	s[shardNum] = append(s[shardNum], item.Value())
+
+	km.AddKey(hashedKey, index, shardNum, size, item.Cost(), item.TTL())
 
 	return nil
 }
 
-func pushToShard(shardNum int, hashedKey uint64, value interface{}, size int, cost int16, ttl int64) {
-	index := len(shards[shardNum])
-	shards[shardNum] = append(shards[shardNum], value)
-
-	keymaps.AddKey(hashedKey, index, shardNum, size, cost, ttl)
-}
-
 // Get ...
-func Get(key string) (interface{}, error) {
+func (s Shards) Get(cluster cache, key string) (interface{}, error) {
 	hashedKey := hasher.Sum(key)
-	if transaction := queue.Get(hashedKey); transaction != nil {
+	if transaction := cluster.Queue().Get(hashedKey); transaction != nil {
 		transaction.Wait()
 	}
 
-	return get(hashedKey)
+	return s.get(cluster, hashedKey)
 }
 
-func get(key uint64) (interface{}, error) {
-	shardNum := hasher.JCH(key, int8(len(shards)))
+func (s Shards) get(cluster cache, key uint64) (interface{}, error) {
+	shardNum := hasher.JCH(key, int8(len(s)))
+	km := cluster.Keymaps()
 
-	lock := keymaps.GetShardLock(shardNum)
+	lock := km.GetShardLock(shardNum)
 	lock.RLock()
 	defer lock.RUnlock()
 
-	index, ok := keymaps.GetIndex(key)
+	index, ok := km.GetIndex(key)
 	if !ok {
 		return nil, lib.ValueNotPresent()
 	}
 
-	policy.UpdateKeyAttrByPolicy(key)
+	cluster.Policy().UpdateKeyAttrByPolicy(km, key)
 
-	value := shards[shardNum][index]
+	value := s[shardNum][index]
 	return value, nil
 }
 
 // Del ...
-func Del(key string) {
-	DelByHash(hasher.Sum(key))
+func (s Shards) Del(km *keymaps.Keymaps, key string) {
+	s.DelByHash(km, hasher.Sum(key))
 }
 
-func DelByHash(key uint64) {
-	shardNum := hasher.JCH(key, int8(len(shards)))
+func (s Shards) DelByHash(km *keymaps.Keymaps, key uint64) {
+	shardNum := hasher.JCH(key, int8(len(s)))
 
-	lock := keymaps.GetShardLock(shardNum)
+	lock := km.GetShardLock(shardNum)
 	lock.RLock()
 	defer lock.RUnlock()
 
-	index, ok := keymaps.GetIndex(key)
+	index, ok := km.GetIndex(key)
 	if !ok {
 		return
 	}
 
-	shards[shardNum][index] = nil
-	keymaps.DelKey(key)
+	s[shardNum][index] = nil
+	km.DelKey(key)
 }

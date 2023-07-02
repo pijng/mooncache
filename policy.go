@@ -4,22 +4,22 @@ import (
 	"github.com/pijng/mooncache/internal/policy"
 )
 
-func LRU() policy.Policy {
+func LRU() policy.Algorithm {
 	return policy.LRU
 }
 
-func MRU() policy.Policy {
+func MRU() policy.Algorithm {
 	return policy.MRU
 }
 
-func LFU() policy.Policy {
+func LFU() policy.Algorithm {
 	return policy.LFU
 }
 
-func MFU() policy.Policy {
+func MFU() policy.Algorithm {
 	return policy.MFU
 }
 
-func FIFO() policy.Policy {
+func FIFO() policy.Algorithm {
 	return policy.FIFO
 }

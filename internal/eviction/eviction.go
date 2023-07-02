@@ -7,24 +7,26 @@ import (
 	"github.com/pijng/mooncache/internal/shards"
 )
 
-func Build() {
-	go worker()
+type Evicter struct{}
+
+func Run(shards shards.Shards, km *keymaps.Keymaps) {
+	go worker(shards, km)
 }
 
-func worker() {
+func worker(shards shards.Shards, km *keymaps.Keymaps) {
 	timer := time.NewTicker(1 * time.Second)
 
 	for {
 		<-timer.C
 		now := time.Now().Unix()
-		evictOnTTL(now)
+		evictOnTTL(shards, km, now)
 	}
 }
 
-func evictOnTTL(now int64) {
-	staleKeys := keymaps.GetStaleKeys()
+func evictOnTTL(shards shards.Shards, km *keymaps.Keymaps, now int64) {
+	staleKeys := km.GetStaleKeys()
 
 	for _, key := range staleKeys {
-		shards.DelByHash(key)
+		shards.DelByHash(km, key)
 	}
 }

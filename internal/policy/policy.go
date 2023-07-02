@@ -16,78 +16,83 @@ const (
 	_FIFO = "FIFO"
 )
 
-type Policy func() Variant
+type Algorithm func() Variant
 
-type policyService struct {
+type PolicyService struct {
 	getKeyByPolicy func() uint64
-	updater        func(uint64)
+	updater        func(*keymaps.Keymaps, uint64)
+	Variant        Variant
 }
 
-var service policyService
-
-func Build(variant Variant) {
+func Build(km *keymaps.Keymaps, variant Variant) *PolicyService {
 	switch variant {
 	case _LRU:
-		service = policyService{
-			getKeyByPolicy: keymaps.GetKeyByMinPolicyAttr,
+		return &PolicyService{
+			getKeyByPolicy: km.GetKeyByMinPolicyAttr,
 			updater:        updateKeyAttrByTime,
+			Variant:        variant,
 		}
 	case _LFU:
-		service = policyService{
-			getKeyByPolicy: keymaps.GetKeyByMinPolicyAttr,
+		return &PolicyService{
+			getKeyByPolicy: km.GetKeyByMinPolicyAttr,
 			updater:        updateKeyAttrByCount,
+			Variant:        variant,
 		}
 	case _MRU:
-		service = policyService{
-			getKeyByPolicy: keymaps.GetKeyByMaxPolicyAttr,
+		return &PolicyService{
+			getKeyByPolicy: km.GetKeyByMaxPolicyAttr,
 			updater:        updateKeyAttrByTime,
+			Variant:        variant,
 		}
 	case _MFU:
-		service = policyService{
-			getKeyByPolicy: keymaps.GetKeyByMaxPolicyAttr,
+		return &PolicyService{
+			getKeyByPolicy: km.GetKeyByMaxPolicyAttr,
 			updater:        updateKeyAttrByCount,
+			Variant:        variant,
 		}
 	case _FIFO:
-		service = policyService{
-			getKeyByPolicy: keymaps.GetKeyByMinIndex,
-			updater:        func(u uint64) {},
+		return &PolicyService{
+			getKeyByPolicy: km.GetKeyByMinIndex,
+			updater:        func(km *keymaps.Keymaps, u uint64) {},
+			Variant:        variant,
 		}
 	default:
+		return &PolicyService{}
 	}
 }
 
-func UpdateKeyAttrByPolicy(key uint64) {
-	service.updater(key)
+func (ps *PolicyService) UpdateKeyAttrByPolicy(km *keymaps.Keymaps, key uint64) {
+	ps.updater(km, key)
 }
 
-func updateKeyAttrByTime(key uint64) {
-	_, ok := keymaps.GetPolicyAttr(key)
+func updateKeyAttrByTime(km *keymaps.Keymaps, key uint64) {
+	_, ok := km.GetPolicyAttr(key)
 	if !ok {
 		return
 	}
 
 	currentTime := time.Now().Unix()
-	keymaps.SetPolicyAttr(key, currentTime)
+	km.SetPolicyAttr(key, currentTime)
 }
 
-func updateKeyAttrByCount(key uint64) {
-	count, ok := keymaps.GetPolicyAttr(key)
+func updateKeyAttrByCount(km *keymaps.Keymaps, key uint64) {
+	count, ok := km.GetPolicyAttr(key)
 	if !ok {
 		return
 	}
 
-	keymaps.SetPolicyAttr(key, count+1)
+	km.SetPolicyAttr(key, count+1)
 }
 
-func EvictUntilCanFit(size, shardNum int, del func(uint64)) {
-	if keymaps.EnoughSpaceInShard(shardNum, size) {
+func (ps *PolicyService) EvictUntilCanFit(km *keymaps.Keymaps, size, shardNum int, del func(*keymaps.Keymaps, uint64)) {
+	if km.EnoughSpaceInShard(shardNum, size) {
 		return
 	}
 
-	hashedKey := service.getKeyByPolicy()
-	del(hashedKey)
+	hashedKey := ps.getKeyByPolicy()
+	del(km, hashedKey)
 
-	EvictUntilCanFit(size, shardNum, del)
+	ps.EvictUntilCanFit(km, size, shardNum, del)
 }
 
 func LRU() Variant {
