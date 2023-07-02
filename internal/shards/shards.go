@@ -13,7 +13,7 @@ import (
 type cache interface {
 	Keymaps() *keymaps.Keymaps
 	Queue() *queue.Queue
-	Policy() *policy.PolicyService
+	PolicyService() *policy.PolicyService
 }
 
 type itemArgs interface {
@@ -52,7 +52,7 @@ func (s Shards) set(cluster cache, shardSize int, hashedKey uint64, item itemArg
 	size := lib.ValueSize(item.Value())
 
 	km := cluster.Keymaps()
-	ps := cluster.Policy()
+	ps := cluster.PolicyService()
 
 	if lib.CantFitInShard(km, ps.Variant, shardSize, shardNum, size) {
 		return fmt.Errorf("Can't fit value for `%v` key – not enough shard volume: value has `%v` size out of `%v` for shard[%v]",
@@ -96,7 +96,7 @@ func (s Shards) get(cluster cache, key uint64) (interface{}, error) {
 		return nil, lib.ValueNotPresent()
 	}
 
-	cluster.Policy().UpdateKeyAttrByPolicy(km, key)
+	cluster.PolicyService().UpdateKeyAttrByPolicy(km, key)
 
 	value := s[shardNum][index]
 	return value, nil

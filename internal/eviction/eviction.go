@@ -7,8 +7,6 @@ import (
 	"github.com/pijng/mooncache/internal/shards"
 )
 
-type Evicter struct{}
-
 func Run(shards shards.Shards, km *keymaps.Keymaps) {
 	go worker(shards, km)
 }

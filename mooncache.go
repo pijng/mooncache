@@ -20,18 +20,18 @@ type ItemOptions struct {
 }
 
 type cache struct {
-	config  *Config
-	keymaps *keymaps.Keymaps
-	shards  shards.Shards
-	queue   *queue.Queue
-	policy  *policy.PolicyService
+	config        *Config
+	keymaps       *keymaps.Keymaps
+	shards        shards.Shards
+	queue         *queue.Queue
+	policyService *policy.PolicyService
 }
 
-func (c *cache) Config() *Config               { return c.config }
-func (c *cache) Keymaps() *keymaps.Keymaps     { return c.keymaps }
-func (c *cache) Shards() shards.Shards         { return c.shards }
-func (c *cache) Queue() *queue.Queue           { return c.queue }
-func (c *cache) Policy() *policy.PolicyService { return c.policy }
+func (c *cache) Config() *Config                      { return c.config }
+func (c *cache) Keymaps() *keymaps.Keymaps            { return c.keymaps }
+func (c *cache) Shards() shards.Shards                { return c.shards }
+func (c *cache) Queue() *queue.Queue                  { return c.queue }
+func (c *cache) PolicyService() *policy.PolicyService { return c.policyService }
 
 type itemArgs struct {
 	key   string
@@ -68,7 +68,7 @@ func New(config *Config) error {
 
 		if config.Algorithm() != "" {
 			policyService := policy.Build(cluster.Keymaps(), config.Algorithm())
-			cluster.policy = policyService
+			cluster.policyService = policyService
 		}
 
 		eviction.Run(cluster.Shards(), cluster.Keymaps())
