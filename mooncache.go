@@ -20,11 +20,11 @@ type ItemOptions struct {
 }
 
 type cache struct {
+	policyService *policy.PolicyService
 	config        *Config
 	keymaps       *keymaps.Keymaps
-	shards        shards.Shards
 	queue         *queue.Queue
-	policyService *policy.PolicyService
+	shards        shards.Shards
 }
 
 func (c *cache) Config() *Config                      { return c.config }
@@ -34,10 +34,10 @@ func (c *cache) Queue() *queue.Queue                  { return c.queue }
 func (c *cache) PolicyService() *policy.PolicyService { return c.policyService }
 
 type itemArgs struct {
-	key   string
 	value interface{}
-	cost  int16
+	key   string
 	ttl   int64
+	cost  int16
 }
 
 func (i *itemArgs) Key() string        { return i.key }
